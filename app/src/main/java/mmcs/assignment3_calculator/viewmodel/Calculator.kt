@@ -1,13 +1,13 @@
 package mmcs.assignment3_calculator.viewmodel
 
-import androidx.databinding.ObservableField
+import androidx.lifecycle.MutableLiveData
 
 enum class Operation { ADD, SUB, MUL, DIV }
 
 interface Calculator {
 
     // Observable display, should be referenced in layout
-    var display: ObservableField<String>
+    var display: MutableLiveData<String>
 
     // Add new digit to current input and update display
     fun addDigit(dig: Int)
