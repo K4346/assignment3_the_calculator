@@ -19,8 +19,7 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     override fun addPoint() {
-        if (display.value?.isEmpty() == true || display.value?.get(display.value!!.length - 1) == '.') return
-        display.value = display.value + '.'
+        display.value = addDotToEnd(display.value?:"")
     }
 
     override fun addOperation(op: Operation) {
@@ -98,5 +97,21 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         }
 
         return operandStack.last()
+    }
+
+    fun addDotToEnd(input: String): String {
+        var output = input.trim()
+
+        if (output.isBlank() || output.last().isDigit().not()) {
+            return input
+        }
+        val lastNumIndex = output.lastIndexOfAny(charArrayOf('+', '-', '×', '÷')) + 1
+        val lastNum = output.substring(lastNumIndex)
+        if (lastNum.contains('.')) {
+
+            return input
+        }
+        output += "."
+        return output
     }
 }
