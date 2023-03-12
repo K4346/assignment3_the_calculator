@@ -3,6 +3,7 @@ package mmcs.assignment3_calculator.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import net.objecthunter.exp4j.ExpressionBuilder
 
 class CalculatorViewModel(application: Application) : AndroidViewModel(application), Calculator {
 
@@ -15,11 +16,12 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     override fun addDigit(dig: Int) {
-        display.value = display.value + dig.toString()
+        display.value = removeTrailingZeroes(display.value + dig.toString())
+
     }
 
     override fun addPoint() {
-        display.value = addDotToEnd(display.value?:"")
+        display.value = addDotToEnd(display.value ?: "")
     }
 
     override fun addOperation(op: Operation) {
@@ -27,8 +29,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
                 ?.isDigit() == false
         ) return
         display.value = display.value + when (op) {
-            Operation.MUL -> '×'
-            Operation.DIV -> '÷'
+            Operation.MUL -> '*'
+            Operation.DIV -> '/'
             Operation.ADD -> '+'
             Operation.SUB -> '-'
         }
@@ -38,7 +40,8 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
         if (display.value?.isEmpty() == true || display.value?.get(display.value!!.length - 1)
                 ?.isDigit() == false
         ) return
-        display.value = calc(display.value ?: "").toString()
+        display.value = ExpressionBuilder((display.value ?: "")).build().evaluate().toString()
+//        display.value = calc(display.value ?: "").toString()
     }
 
     override fun clear() {
@@ -46,69 +49,31 @@ class CalculatorViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     override fun reset() {
-        TODO("Not yet implemented")
+        display.value = ""
     }
 
-    fun calc(input: String): Double {
-        // разбиение строки на элементы
-        val regex = "([0-9\\.]+)|([+\\-×÷])".toRegex()
-        val tokens = regex.findAll(input).map { it.value }.toList()
-
-//        порядок
-        val operatorPrecedence = mapOf("+" to 1, "-" to 1, "×" to 2, "÷" to 2)
-        val operatorStack = mutableListOf<String>()
-        val operandStack = mutableListOf<Double>()
-
-        for (token in tokens) {
-            when {
-                token.matches("[0-9\\.]+".toRegex()) -> operandStack.add(token.toDouble())
-                operatorPrecedence.containsKey(token) -> {
-                    while (operatorStack.isNotEmpty() && operatorPrecedence[token]!! <= operatorPrecedence[operatorStack.last()]!!) {
-                        val operator = operatorStack.removeLast()
-                        val operand2 = operandStack.removeLast()
-                        val operand1 = operandStack.removeLast()
-                        val result = when (operator) {
-                            "+" -> operand1 + operand2
-                            "-" -> operand1 - operand2
-                            "×" -> operand1 * operand2
-                            "÷" -> operand1 / operand2
-                            else -> throw IllegalArgumentException("Invalid operator: $operator")
-                        }
-                        operandStack.add(result)
-                    }
-                    operatorStack.add(token)
-                }
-                else -> throw IllegalArgumentException("Invalid token: $token")
-            }
+    private fun removeTrailingZeroes(str: String): String {
+        if (str.length < 2) return str
+        if (str[str.lastIndex - 1] != '0') return str
+        for (i in str.lastIndex - 1 downTo 0) {
+            if (str[i] == '+' || str[i] == '-' || str[i] == '*' || str[i] == '/') return str.substring(
+                0,
+                str.lastIndex
+            )
+            if (str[i] == '.') return str
         }
-
-        while (operatorStack.isNotEmpty()) {
-            val operator = operatorStack.removeLast()
-            val operand2 = operandStack.removeLast()
-            val operand1 = operandStack.removeLast()
-            val result = when (operator) {
-                "+" -> operand1 + operand2
-                "-" -> operand1 - operand2
-                "×" -> operand1 * operand2
-                "÷" -> operand1 / operand2
-                else -> throw IllegalArgumentException("Invalid operator: $operator")
-            }
-            operandStack.add(result)
-        }
-
-        return operandStack.last()
+        return str.substring(0, str.lastIndex)
     }
 
-    fun addDotToEnd(input: String): String {
+    private fun addDotToEnd(input: String): String {
         var output = input.trim()
 
         if (output.isBlank() || output.last().isDigit().not()) {
             return input
         }
-        val lastNumIndex = output.lastIndexOfAny(charArrayOf('+', '-', '×', '÷')) + 1
+        val lastNumIndex = output.lastIndexOfAny(charArrayOf('+', '-', '*', '/')) + 1
         val lastNum = output.substring(lastNumIndex)
         if (lastNum.contains('.')) {
-
             return input
         }
         output += "."

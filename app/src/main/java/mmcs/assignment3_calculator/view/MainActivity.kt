@@ -1,6 +1,7 @@
 package mmcs.assignment3_calculator.view
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -64,7 +65,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.bEquel.setOnClickListener {
-            viewModel.compute()
+            if ((viewModel.display.value ?: "").contains("/0")) {
+                Toast.makeText(this, "Делить на ноль нельзя", Toast.LENGTH_LONG).show()
+            } else {
+                viewModel.compute()
+            }
         }
 
         binding.bDel.setOnClickListener {
